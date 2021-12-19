@@ -1,15 +1,20 @@
 from starlette.status import HTTP_404_NOT_FOUND
-from .. import models, utils, schema
-from fastapi import FastAPI, Response, status, Body, HTTPException, Depends, APIRouter
+from .. import models
+from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
+from typing import List, Optional
+from .. import models, schemas
+from ..schemas import PostCreate, Post
 from ..database import get_db
-from typing import List
-from ..schema import PostCreate, Post
-
-router = APIRouter()
 
 
-@router.get("/posts", response_model=List[Post])
+router = APIRouter(
+    prefix="/posts",
+    tags=['Posts']
+)
+
+
+@router.get("/", response_model=List[Post])
 def get_posts(db: Session = Depends(get_db)):
     # cursor.execute(""" SELECT * FROM posts""")
     # posts = cursor.fetchall()
@@ -17,7 +22,7 @@ def get_posts(db: Session = Depends(get_db)):
     return posts
 
 
-@router.get("/posts/{id}", response_model=Post)
+@router.get("/{id}", response_model=Post)
 def get_post(id: int, response: Response, db: Session = Depends(get_db)):
     # cursor.execute(""" SELECT * FROM posts WHERE id = %s """, str(id))
     # post = cursor.fetchone()
@@ -28,7 +33,7 @@ def get_post(id: int, response: Response, db: Session = Depends(get_db)):
     return post
 
 
-@router.post('/posts',  status_code=status.HTTP_201_CREATED, response_model=Post)
+@router.post('/',  status_code=status.HTTP_201_CREATED, response_model=Post)
 def create_post(post: PostCreate, db: Session = Depends(get_db)):
     # cursor.execute(""" INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """, (
     #     post.title, post.content, post.published))
@@ -42,7 +47,7 @@ def create_post(post: PostCreate, db: Session = Depends(get_db)):
     return new_post
 
 
-@router.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db: Session = Depends(get_db)):
     # cursor.execute(
     #     """DELETE FROM posts WHERE id = %s RETURNING * """, str(id))
@@ -57,7 +62,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/posts/{id}")
+@router.put("/{id}")
 def update_post(id: int, updated_post: PostCreate, db: Session = Depends(get_db)):
     # cursor.execute(""" UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s
     # RETURNING *""",
