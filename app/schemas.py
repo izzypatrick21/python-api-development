@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -16,10 +17,8 @@ class PostCreate(PostBase):
 
 class Post(PostBase):
     id: str
-    title: str
-    content: str
-    published: bool
     created_at: datetime
+    owner_id: int
 
     class Config:
         orm_mode = True
@@ -42,3 +41,12 @@ class UserOut(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    id: Optional[str] = None
