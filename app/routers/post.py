@@ -1,12 +1,11 @@
+from sqlalchemy.sql.functions import func
 from starlette.status import HTTP_404_NOT_FOUND
-from .. import models
 from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from .. import models, schemas
-from ..schemas import PostCreate, Post
+from ..schemas import PostCreate, Post, PostOut
 from ..database import get_db
-from .. import oauth2
+from .. import models, oauth2
 
 
 router = APIRouter(
@@ -15,13 +14,18 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[Post])
+# @router.get("/", response_model=List[Post])
+@router.get("/", response_model=List[PostOut])
 def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), limit: int = 3, skip: int = 0, search: Optional[str] = ""):
     # cursor.execute(""" SELECT * FROM posts""")
     # posts = cursor.fetchall()
     posts = db.query(models.Post).filter(
         models.Post.title.contains(search)).limit(limit).offset(skip).all()
-    return posts
+
+    results = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(
+        models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+
+    return results
 
 
 @router.get("/{id}", response_model=Post)
